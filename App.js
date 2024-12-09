@@ -1,101 +1,24 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, Button } from "react-native";
-import { Audio } from "expo-av";
 import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Intro from "./screens/Intro";
+import Recording from "./screens/Recording";
+import SignInScreen from "./screens/SignInScreen ";
+import SignUpScreen from "./screens/SignUpScreen";
 
-export default function App() {
-  const [recording, setRecording] = React.useState();
-  const [recordings, setRecordings] = React.useState([]);
+const Stack = createNativeStackNavigator();
 
-  async function startRecording() {
-    try {
-      const perm = await Audio.requestPermissionsAsync();
-      if (perm.status === "granted") {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
-        });
-        const { recording } = await Audio.Recording.createAsync(
-          Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
-        );
-        setRecording(recording);
-      }
-    } catch (err) {}
-  }
-  async function stopRecording() {
-    try {
-      await recording.stopAndUnloadAsync(); 
-      const { sound, status } = await recording.createNewLoadedSoundAsync();
-      const newRecording = {
-        sound: sound,
-        duration: getDurationFormatted(status.durationMillis), 
-        file: recording.getURI(),
-      };
-      setRecordings((prevRecordings) => [...prevRecordings, newRecording]); 
-      setRecording(undefined); 
-    } catch (err) {
-      console.error("Error stopping recording:", err); 
-    }
-  }
-  
-  function getDurationFormatted(milliseconds) {
-    const minutes = milliseconds / 1000 / 60;
-    const seconds = Math.round((minutes - Math.floor(minutes)) * 60);
-    return seconds < 10
-      ? `${Math.floor(minutes)}:0${seconds}`
-      : `${Math.floor(minutes)}:${seconds}`;
-  }
-  function getRecordingLines() {
-    return recordings.map((recodingLine, index) => {
-      return (
-        <View key={index} style={styles.row}>
-          <Text style={styles.fill}>
-            Recording... #{index + 1} | {recodingLine.duration}
-          </Text>
-          <Button
-            onPress={() => recodingLine.sound.replayAsync()}
-            title="Play"
-          ></Button>
-        </View>
-      );
-    });
-  }
-  function clearRecording() {
-    setRecordings([]);
-  }
-
+const App = () => {
   return (
-    <View style={styles.container}>
-      <Button
-        title={recording ? "Stop Recording" : "Start Recording"}
-        onPress={recording ? stopRecording : startRecording}
-      />
-      {getRecordingLines()}
-      <Button
-        title={recordings.length > 0 ? "Clear Recordings" : ""}
-        onPress={clearRecording}
-      />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Recording">
+        <Stack.Screen name="intro" component={Intro} />
+        <Stack.Screen name="signup" component={SignUpScreen} />
+        <Stack.Screen name="signin" component={SignInScreen} />
+        <Stack.Screen name="Recording" component={Recording} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 10,
-    marginRight: 40,
-  },
-  fill:{
-    flex: 1,
-    margin: 15
-
-  }
-});
+export default App;
